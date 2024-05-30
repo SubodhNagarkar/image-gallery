@@ -2,6 +2,7 @@ package com.subodh.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -39,6 +40,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UserModel getUserById(int userId) {
+        Optional<UserModel> dbModel = userRepository.findById(userId);
+        if (dbModel.isPresent()) {
+            return dbModel.get();
+        } else {
+            return null;
+        }
+    }
+
+    @Override
     public UserModel getUserByEmail(String userEmail) {
 
         return userRepository.findByEmail(userEmail);
@@ -70,4 +81,3 @@ public class UserServiceImpl implements UserService {
     }
 
 }
-

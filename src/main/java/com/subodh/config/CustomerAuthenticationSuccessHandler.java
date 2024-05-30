@@ -27,12 +27,12 @@ public class CustomerAuthenticationSuccessHandler implements AuthenticationSucce
 
         String userEmail = authentication.getName();
 
-        UserModel  dbUser = userService.getUserByEmail(userEmail);
+        UserModel dbUser = userService.getUserByEmail(userEmail);
 
         HttpSession session = request.getSession();
         session.setAttribute("user", dbUser);
 
-        response.sendRedirect(request.getContextPath() + "/user/image/images");
+        response.sendRedirect(request.getContextPath() + "/user/image/images/" + dbUser.getUserId());
 
         // request.getRequestDispatcher("/user/image/images").forward(request,
         // response); this will just forward ur request
@@ -41,4 +41,3 @@ public class CustomerAuthenticationSuccessHandler implements AuthenticationSucce
     }
 
 }
-

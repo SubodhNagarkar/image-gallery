@@ -6,9 +6,11 @@ import com.subodh.model.UserModel;
 
 public interface UserService extends UserDetailsService {
 
-    UserModel saveUser(UserModel userModel);
+	 UserModel saveUser(UserModel userModel);
 
-    void removeSessionMsg();
+	    UserModel getUserById(int userId);
 
-    UserModel getUserByEmail(String userEmail);
+	    void removeSessionMsg();
+
+	    UserModel getUserByEmail(String userEmail);
 }

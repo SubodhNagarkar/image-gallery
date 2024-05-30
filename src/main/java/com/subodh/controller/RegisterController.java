@@ -15,7 +15,7 @@ import jakarta.validation.Valid;
 @Controller
 public class RegisterController {
 
-	private UserService userService;
+    private UserService userService;
 
     public RegisterController(UserService userService) {
         this.userService = userService;
@@ -40,6 +40,5 @@ public class RegisterController {
         }
         return "redirect:/user/showLoginForm";
     }
-
 
 }

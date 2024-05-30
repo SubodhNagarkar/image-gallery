@@ -9,6 +9,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.subodh.model.ImageModel;
+import com.subodh.model.UserModel;
 import com.subodh.repository.ImageRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,17 +17,19 @@ import jakarta.servlet.http.HttpSession;
 
 @Service
 public class ImageServiceImpl implements ImageService {
-	 @Autowired
-	    private ImageRepository imageRepository;
-	@Override
+
+    @Autowired
+    private ImageRepository imageRepository;
+
+    @Override
     public ImageModel saveImage(ImageModel imageModel) {
         ImageModel savedImage = imageRepository.save(imageModel);
         return savedImage;
     }
 
     @Override
-    public List<ImageModel> getAllImages() {
-        List<ImageModel> allImages = imageRepository.findAll();
+    public List<ImageModel> getAllImages(UserModel userModel) {
+        List<ImageModel> allImages = imageRepository.findByUserModel(userModel);
 
         return allImages;
     }
@@ -58,4 +61,5 @@ public class ImageServiceImpl implements ImageService {
         session.removeAttribute("msg");
 
     }
+
 }

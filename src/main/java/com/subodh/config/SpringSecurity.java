@@ -35,6 +35,7 @@ public class SpringSecurity {
 
         http.authorizeHttpRequests(configurer -> configurer
                 .requestMatchers("/").permitAll()
+                .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
                 .requestMatchers("/user/showLoginForm", "/user/register", "/user/signup").permitAll()
                 .anyRequest().authenticated());
         http.formLogin(form -> form
@@ -51,4 +52,3 @@ public class SpringSecurity {
     }
 
 }
-
