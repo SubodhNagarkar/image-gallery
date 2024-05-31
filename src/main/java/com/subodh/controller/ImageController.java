@@ -24,6 +24,7 @@ import com.subodh.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 @Controller
+
 public class ImageController {
 
     @Autowired
@@ -35,104 +36,97 @@ public class ImageController {
     private static String uploadDir = "src/main/resources/static/images";
 
     @GetMapping("/user/image")
-    public String showImageForm(Model model) {
+    public String showImageForm(Model model, HttpSession session) {
         model.addAttribute("imageObj", new ImageModel());
+        session.setAttribute("imageId", 0);
+        session.setAttribute("imageTitle", "");
         return "image-form";
     }
 
-    @PostMapping("/user/image/{userId}")
-    public String processImageForm(@PathVariable int userId, @Valid @ModelAttribute("imageObj") ImageModel imageModel,
+    @PostMapping("/user/image")
+    public String processImageForm(@Valid @ModelAttribute("imageObj") ImageModel imageModel,
             BindingResult bindingResult, @RequestParam("imageData") MultipartFile file, HttpSession session)
             throws Exception {
 
-        UserModel dbModel; // empty object
         if (bindingResult.hasErrors()) {
             // System.out.println("Inside if of error");
             return "image-form";
         } else {
-            dbModel = userService.getUserById(userId);
+            UserModel sessionUser = (UserModel) session.getAttribute("user");
             String imageTitle = "";
-            int imageId = imageModel.getImageId();
-            if (dbModel != null) {
-                if (!file.isEmpty()) {
-                    // type = file.getContentType() jpg, png,
+            // int imageId = imageModel.getImageId(); // 0
 
-                    if (imageId != 0) {
+            int sessionImageId = (int) session.getAttribute("imageId");
+            String sessionImageTitle = (String) session.getAttribute("imageTitle");
+            if (!file.isEmpty()) {
+                // type = file.getContentType() jpg, png,
 
-                        String existingTitle = imageModel.getImageTitle();
-                        // This case is for update
-                        // if update user pass image then delete old image
-                        Path fileNameAndPath = Paths.get(uploadDir, existingTitle);
-                        System.out.println(fileNameAndPath);
-                        Files.deleteIfExists(fileNameAndPath);
+                if (sessionImageId != 0) {
 
-                    }
-                    // save image
-                    imageTitle = file.getOriginalFilename();
-                    Path fileNameAndPath = Paths.get(uploadDir, imageTitle);
-                    Files.write(fileNameAndPath, file.getBytes());
-                } else if (imageModel.getImageId() == 0) {
-                    session.setAttribute("msg", "Please Add Image");
-
-                    return "image-form";
-                } else {
-                    System.out.println("Inside else of file" + imageModel.getImageTitle());
-                    imageTitle = imageModel.getImageTitle();
+                    String existingTitle = sessionImageTitle;
+                    // This case is for update
+                    // if update user pass image then delete old image
+                    Path fileNameAndPath = Paths.get(uploadDir, existingTitle);
+                    System.out.println(fileNameAndPath);
+                    Files.deleteIfExists(fileNameAndPath);
 
                 }
+                // save image
+                imageTitle = file.getOriginalFilename();
+                Path fileNameAndPath = Paths.get(uploadDir, imageTitle);
+                Files.write(fileNameAndPath, file.getBytes());
+            } else if (imageModel.getImageId() == 0) {
+                session.setAttribute("msg", "Please Add Image");
 
-                imageModel.setImageTitle(imageTitle);
-                imageModel.setUserModel(dbModel);
-
-                ImageModel savedImage = imageService.saveImage(imageModel);
-                if (savedImage != null) {
-                    if (imageId != 0) {
-
-                        session.setAttribute("msg", "Image updated successfully");
-                    } else {
-                        session.setAttribute("msg", "Image saved successfully");
-                    }
-                } else {
-                    session.setAttribute("msg", "Something bad happen on server");
-
-                }
-                return "redirect:/user/image/images/"+ userId;
+                return "image-form";
             } else {
-                session.setAttribute("msg", "user not found");
-                return "redirect:/";
+                System.out.println("Inside else of file" + imageModel.getImageTitle());
+                imageTitle = sessionImageTitle;
+
             }
 
+            imageModel.setImageTitle(imageTitle);
+            imageModel.setUserModel(sessionUser);
+            imageModel.setImageId(sessionImageId);
+
+            ImageModel savedImage = imageService.saveImage(imageModel);
+            if (savedImage != null) {
+                if (sessionImageId != 0) {
+
+                    session.setAttribute("msg", "Image updated successfully");
+                } else {
+                    session.setAttribute("msg", "Image saved successfully");
+                }
+            } else {
+                session.setAttribute("msg", "Something bad happen on server");
+
+            }
+            return "redirect:/user/image/images";
+
         }
     }
 
-    @GetMapping("/user/image/images/{userId}")
-    public String showDashboard(@PathVariable int userId, Model model, HttpSession session) {
-        UserModel userModel = userService.getUserById(userId);
-
+    @GetMapping("/user/image/images")
+    public String showDashboard(Model model, HttpSession session) {
         UserModel sessionUser = (UserModel) session.getAttribute("user");
-        if (userModel != null && sessionUser.getUserId() == userModel.getUserId()) {
-            List<ImageModel> allImages = imageService.getAllImages(userModel);
-            model.addAttribute("allImages", allImages);
 
-            return "image-dashboard";
-        } else {
+        List<ImageModel> allImages = imageService.getAllImages(sessionUser);
+        model.addAttribute("allImages", allImages);
 
-            session.setAttribute("msg", "You are not authorized to delete other user records.");
-            return "redirect:/";
-        }
+        return "image-dashboard";
 
     }
 
-    @GetMapping("/user/image/delete/{id}/{userId}")
+    @GetMapping("/user/image/delete/{id}")
     // if passed string in path variable program fails
-    public String deleteImage(@PathVariable int id, @PathVariable int userId, HttpSession session) throws Exception {
+    public String deleteImage(@PathVariable int id, HttpSession session) throws Exception {
         // System.out.println(id);
         ImageModel dbImage = imageService.getImageById(id);
-        UserModel userModel = userService.getUserById(userId);
-        if (dbImage != null && userModel != null) {
+        UserModel sessionUser = (UserModel) session.getAttribute("user");
+        if (dbImage != null) {
 
             UserModel userImageModel = dbImage.getUserModel();
-            if (userImageModel.getUserId() == userModel.getUserId()) {
+            if (userImageModel.getUserId() == sessionUser.getUserId()) {
 
                 boolean result = false;
                 result = imageService.deleteImage(dbImage);
@@ -152,7 +146,7 @@ public class ImageController {
         } else {
             session.setAttribute("msg", "Image with id = " + id + " doesnot exists in our records!!");
         }
-        return "redirect:/user/image/images/" + userId;
+        return "redirect:/user/image/images";
     }
 
     @GetMapping("/user/image/update/{id}")
@@ -165,6 +159,8 @@ public class ImageController {
             UserModel sessionUser = (UserModel) session.getAttribute("user");
             if (userImageModel.getUserId() == sessionUser.getUserId()) {
 
+                session.setAttribute("imageId", id);
+                session.setAttribute("imageTitle", dbImage.getImageTitle());
                 model.addAttribute("imageObj", dbImage);
                 return "image-form";
 
