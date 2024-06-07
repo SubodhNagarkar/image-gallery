@@ -15,30 +15,30 @@ import jakarta.validation.Valid;
 @Controller
 public class RegisterController {
 
-    private UserService userService;
+	 private UserService userService;
 
-    public RegisterController(UserService userService) {
-        this.userService = userService;
-    }
+	    public RegisterController(UserService userService) {
+	        this.userService = userService;
+	    }
 
-    @GetMapping("/user/register")
-    public String showRegistrationForm(Model model) {
-        model.addAttribute("userObj", new UserModel());
-        return "registration-form";
-    }
+	    @GetMapping("/user/register")
+	    public String showRegistrationForm(Model model) {
+	        model.addAttribute("userObj", new UserModel());
+	        return "registration-form";
+	    }
 
-    @PostMapping("/user/signup")
-    public String processRegistrationForm(@Valid @ModelAttribute("userObj") UserModel userModel,
-            BindingResult bindingResult, HttpSession session) {
+	    @PostMapping("/user/signup")
+	    public String processRegistrationForm(@Valid @ModelAttribute("userObj") UserModel userModel,
+	            BindingResult bindingResult, HttpSession session) {
 
-        if (bindingResult.hasErrors()) {
-            return "registration-form";
-        } else {
-            System.out.println("inside registration method, " + userModel);
-            userService.saveUser(userModel);
-            session.setAttribute("msg", "user saved succesffully");
-        }
-        return "redirect:/user/showLoginForm";
-    }
+	        if (bindingResult.hasErrors()) {
+	            return "registration-form";
+	        } else {
+	            System.out.println("inside registration method, " + userModel);
+	            userService.saveUser(userModel);
+	            session.setAttribute("msg", "user saved succesffully");
+	        }
+	        return "redirect:/user/showLoginForm";
+	    }
 
 }

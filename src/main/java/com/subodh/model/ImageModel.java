@@ -22,6 +22,6 @@ public class ImageModel {
     private String imageTitle;
 
     @ManyToOne
-    private UserModel userModel; // aggregation -> HAS A
+    private UserModel userModel; 
 
 }

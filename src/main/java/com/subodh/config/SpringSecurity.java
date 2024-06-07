@@ -37,6 +37,8 @@ public class SpringSecurity {
                 .requestMatchers("/").permitAll()
                 .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
                 .requestMatchers("/user/showLoginForm", "/user/register", "/user/signup").permitAll()
+                .requestMatchers("/user/**").hasRole("USER") 
+                .requestMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated());
         http.formLogin(form -> form
                 .loginPage("/user/showLoginForm")
@@ -47,8 +49,9 @@ public class SpringSecurity {
 
         http.logout(logout -> logout.permitAll());
         http.csrf(csrf -> csrf.disable());
+        http.exceptionHandling(configurer -> configurer.accessDeniedPage("/accessdenied"));
 
-        return http.build();
-    }
+        return http.build(); 
+        }
 
 }

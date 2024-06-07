@@ -1,6 +1,8 @@
 package com.subodh.service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,7 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import com.subodh.model.RolesModel;
 import com.subodh.model.UserModel;
+import com.subodh.repository.RoleRepository;
 import com.subodh.repository.UserRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,61 +27,87 @@ import jakarta.servlet.http.HttpSession;
 @Service
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+	 @Autowired
+	    private UserRepository userRepository;
 
-    @Autowired
-    private BCryptPasswordEncoder bCryptPasswordEncoder;
+	    @Autowired
+	    private RoleRepository roleRepository;
 
-    @Override
-    public UserModel saveUser(UserModel userModel) {
+	    @Autowired
+	    private BCryptPasswordEncoder bCryptPasswordEncoder;
 
-        String encodedPassword = bCryptPasswordEncoder.encode(userModel.getPassword());
-        System.out.println(encodedPassword);
-        userModel.setPassword(encodedPassword);
-        UserModel savedUser = userRepository.save(userModel);
-        return savedUser;
-    }
+	    @Override
+	    public UserModel saveUser(UserModel userModel) {
 
-    @Override
-    public UserModel getUserById(int userId) {
-        Optional<UserModel> dbModel = userRepository.findById(userId);
-        if (dbModel.isPresent()) {
-            return dbModel.get();
-        } else {
-            return null;
-        }
-    }
+	        String encodedPassword = bCryptPasswordEncoder.encode(userModel.getPassword());
+	        System.out.println(encodedPassword);
+	        userModel.setPassword(encodedPassword);
+	        RolesModel rolesModel = roleRepository.findByRoleName("ROLE_USER").get(0);
 
-    @Override
-    public UserModel getUserByEmail(String userEmail) {
+	        userModel.setRoles(Arrays.asList(rolesModel));
+	        UserModel savedUser = userRepository.save(userModel);
+	        return savedUser;
+	    }
 
-        return userRepository.findByEmail(userEmail);
-    }
+	    @Override
+	    public UserModel getUserById(int userId) {
+	        Optional<UserModel> dbModel = userRepository.findById(userId);
+	        if (dbModel.isPresent()) {
+	            return dbModel.get();
+	        } else {
+	            return null;
+	        }
+	    }
 
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+	    @Override
+	    public UserModel getUserByEmail(String userEmail) {
 
-        UserModel dbUserModel = userRepository.findByEmail(username);
-        if (dbUserModel != null) {
-            SimpleGrantedAuthority role = new SimpleGrantedAuthority("USER");
-            List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-            authorities.add(role);
-            return new User(dbUserModel.getEmail(), dbUserModel.getPassword(), authorities);
-        } else {
-            throw new UsernameNotFoundException("Invalid username or password");
-        }
-    }
+	        return userRepository.findByEmail(userEmail);
+	    }
 
-    @Override
-    public void removeSessionMsg() {
-        ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
+	    @Override
+	    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        HttpServletRequest request = attr.getRequest();
-        HttpSession session = request.getSession();
+	        UserModel dbUserModel = userRepository.findByEmail(username);
+	        
+	        if (dbUserModel != null) {
+	            
+	            Collection<SimpleGrantedAuthority> authorities = mapRolesToAuthorities(dbUserModel.getRoles());
+	            return new User(dbUserModel.getEmail(), dbUserModel.getPassword(), authorities);
+	        } else {
+	            throw new UsernameNotFoundException("Invalid username or password");
+	        }
+	    }
 
-        session.removeAttribute("msg");
+	    private Collection<SimpleGrantedAuthority> mapRolesToAuthorities(Collection<RolesModel> roles) {
 
-    }
+	        Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
 
-}
+	        for (RolesModel tempRole : roles) {
+	          
+	            SimpleGrantedAuthority tempAuthority = new SimpleGrantedAuthority(tempRole.getRoleName());
+	            authorities.add(tempAuthority);
+
+	        }
+	        return authorities;
+
+	    }
+
+	    @Override
+	    public List<UserModel> getAllUsers() {
+
+	        return userRepository.findAll();
+	    }
+
+	    @Override
+	    public void removeSessionMsg() {
+	        ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
+
+	        HttpServletRequest request = attr.getRequest();
+	        HttpSession session = request.getSession();
+
+	        session.removeAttribute("msg");
+
+	    }
+
+	}

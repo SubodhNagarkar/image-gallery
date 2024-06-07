@@ -34,9 +34,7 @@ public class CustomerAuthenticationSuccessHandler implements AuthenticationSucce
 
          response.sendRedirect(request.getContextPath() + "/user/image/images");
 
-        // request.getRequestDispatcher("/user/image/images").forward(request,
-        // response); this will just forward ur request
-        // and on refresh again your url will hit login authentication
+        
 
     }
 
